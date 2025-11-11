@@ -9,7 +9,7 @@ export const usePhraseContext = () => {
   return context;
 };
 
-// ✅ Hook de debounce (300ms)
+
 const useDebounce = (value: string, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
@@ -24,31 +24,31 @@ const useDebounce = (value: string, delay: number) => {
   return debouncedValue;
 };
 
-// ✅ Función para escapar caracteres especiales en regex
+
 const escapeRegExp = (str: string): string => {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 };
 
-// ✅ Hook optimizado con todas las validaciones requeridas
+
 export const useFilteredPhrases = () => {
   const { state } = usePhraseContext();
-  
-  // ✅ Debounce del searchQuery (300ms)
+
+
   const debouncedQuery = useDebounce(state.searchQuery, 300);
-  
+
   return useMemo(() => {
-    // ✅ Normalización: trim y espacios múltiples
+
     const normalized = debouncedQuery.trim().replace(/\s+/g, ' ');
-    
-    // ✅ No filtrar si es menor a 2 caracteres
+
+
     if (normalized.length < 2) {
       return state.phrases;
     }
-    
-    // ✅ Crear regex escapada y memoizada
+
+
     try {
       const regex = new RegExp(escapeRegExp(normalized), 'i');
-      
+
       return state.phrases.filter((phrase) => {
         // Normalizar también el texto de la frase
         const phraseNormalized = phrase.text.trim().replace(/\s+/g, ' ');
