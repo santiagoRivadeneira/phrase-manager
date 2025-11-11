@@ -1,4 +1,4 @@
-import type { Action, State } from "../types";
+
 
 /**
  * Reducer principal para gestionar el estado de las frases.
@@ -160,3 +160,7 @@ export const phraseReducer = (state: State, action: Action): State => {
       return state;
   }
 };
+
+
+
+

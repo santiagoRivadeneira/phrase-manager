@@ -1,7 +1,5 @@
 // services/phraseService.ts
 
-import type { Phrase } from '../types';
-
 /**
  * Servicio para gestionar frases (simulación de API)
  * Demuestra: async/await, promesas, error handling, delays

@@ -1,5 +1,4 @@
 import { phraseReducer } from '../store/phraseReducer';
-import type { State, Phrase } from '../types';
 
 describe('phraseReducer', () => {
     const initialState: State = {

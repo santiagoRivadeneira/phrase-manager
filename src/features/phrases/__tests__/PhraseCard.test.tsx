@@ -1,11 +1,31 @@
-import React from 'react'
-import { render, screen, fireEvent } from '@testing-library/react'
-import { jest } from '@jest/globals'
+import Swal, { SweetAlertResult } from 'sweetalert2';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { PhraseCard } from '../components/PhraseCard'
+import toast from 'react-hot-toast';
+
 
 
 // ✅ Mock explícito del módulo que exporta el hook
 // Ajustado a tu ruta real: "../store/PhraseContext"
+
+
+
+// 🔹 Mockeamos librerías externas
+jest.mock('sweetalert2', () => ({
+  fire: jest.fn(),
+}));
+
+jest.mock('react-hot-toast', () => ({
+  success: jest.fn(),
+}));
+
+// 🔹 Forzamos el tipo correcto de mock
+const mockedSwal = Swal.fire as jest.Mock<Promise<SweetAlertResult<any>>>;
+
+const mockPhrase = { id: '1', text: 'Hola mundo' };
+const onDelete = jest.fn();
+const onEdit = jest.fn();
+
 jest.mock('../hooks', () => {
   return {
     __esModule: true,
@@ -87,10 +107,21 @@ describe('PhraseCard', () => {
     expect(screen.getByText('Hola mundo')).toBeInTheDocument()
   })
 
-  it('debe eliminar una frase', () => {
-    render(<PhraseCard phrase={mockPhrase} onDelete={onDelete} onEdit={onEdit} />)
+  it('debe eliminar una frase', async () => {
+    // 🔹 Simulamos que el usuario confirma la eliminación
+    mockedSwal.mockResolvedValueOnce({
+      isConfirmed: true,
+      isDenied: false,
+      isDismissed: false,
+    } as SweetAlertResult<any>);
 
-    fireEvent.click(screen.getByTitle('Eliminar frase'))
-    expect(onDelete).toHaveBeenCalledWith('1')
-  })
+    render(<PhraseCard phrase={mockPhrase} onDelete={onDelete} onEdit={onEdit} />);
+
+    fireEvent.click(screen.getByTitle('Eliminar frase'));
+
+    await waitFor(() => {
+      expect(onDelete).toHaveBeenCalledWith('1');
+      expect(toast.success).toHaveBeenCalledWith('Frase eliminada correctamente');
+    });
+  });
 })

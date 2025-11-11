@@ -2,7 +2,6 @@
 
 import React, { createContext, useReducer, useCallback, useMemo, useEffect } from 'react';
 import { phraseReducer } from './phraseReducer';
-import type { Phrase, State } from '../types';
 
 /**
  * Interface que define el tipo del contexto de frases.
@@ -32,7 +31,6 @@ interface PhraseContextType {
  * @type {React.Context<PhraseContextType | undefined>}
  */
 const PhraseContext = createContext<PhraseContextType | undefined>(undefined);
-
 /**
  * Provider del contexto de frases.
  * Gestiona el estado global de la aplicación incluyendo:
@@ -60,7 +58,6 @@ const PhraseContext = createContext<PhraseContextType | undefined>(undefined);
  * @throws {Error} Si hay un error al cargar desde localStorage
  */
 export const PhraseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Inicializar reducer con estado inicial
   const [state, dispatch] = useReducer(phraseReducer, {
     phrases: [],
     searchQuery: '',
@@ -142,7 +139,6 @@ export const PhraseProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     dispatch({ type: 'SET_LOADING', payload: true });
     
     try {
-      // Simular operación asíncrona (ej: llamada a API)
       await new Promise(resolve => setTimeout(resolve, 300));
       
       const newPhrase: Phrase = {

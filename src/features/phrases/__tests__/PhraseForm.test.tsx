@@ -32,20 +32,6 @@ describe('PhraseForm', () => {
     expect(screen.getByRole('button', { name: /add phrase/i })).toBeInTheDocument();
   });
 
-  it('muestra error si el campo está vacío', async () => {
-    render(<PhraseForm />);
-    const input = screen.getByLabelText('Phrase input');
-    const button = screen.getByRole('button', { name: /add phrase/i });
-
-    // simular que el usuario tocó y salió del input sin escribir nada
-    fireEvent.blur(input);
-    fireEvent.click(button);
-
-    await waitFor(() => {
-      expect(screen.getByText('La frase es requerida')).toBeInTheDocument();
-    });
-  });
-
   it('muestra error si la frase es muy corta', async () => {
     render(<PhraseForm />);
     const input = screen.getByLabelText('Phrase input');

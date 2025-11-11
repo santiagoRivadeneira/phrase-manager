@@ -1,26 +1,53 @@
-// components/PhraseCard.tsx
-
 import React, { memo, useCallback, useState } from 'react';
 import { Edit2, Trash2, Check, X } from 'lucide-react';
-import type { Phrase } from '../types';
 import { usePhraseContext } from '../hooks';
+import Swal from 'sweetalert2';
+import toast from 'react-hot-toast';
 
-interface PhraseCardProps {
+export const PhraseCard: React.FC<{
   phrase: Phrase;
   onDelete: (id: string) => void;
   onEdit: (id: string, text: string) => void;
-}
-
-export const PhraseCard: React.FC<PhraseCardProps> = memo(({ phrase, onDelete, onEdit }) => {
+}> = memo(({ phrase, onDelete, onEdit }) => {
   const { state } = usePhraseContext();
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(phrase.text);
   const [isHovered, setIsHovered] = useState(false);
   const [error, setError] = useState('');
+  const cardRef = React.useRef<HTMLElement>(null);
 
-  const handleDelete = useCallback(() => {
-    onDelete(phrase.id);
-  }, [phrase.id, onDelete]);
+  const handleDelete = useCallback(async () => {
+    const result = await Swal.fire({
+      title: '¿Eliminar frase?',
+      text: `¿Estás seguro de eliminar: "${phrase.text}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+    });
+
+    if (result.isConfirmed) {
+      onDelete(phrase.id);
+      toast.success('Frase eliminada correctamente');
+
+      // ✅ Focus management
+      setTimeout(() => {
+        const nextCard = cardRef.current?.parentElement?.nextElementSibling?.querySelector('button');
+        const prevCard = cardRef.current?.parentElement?.previousElementSibling?.querySelector('button');
+        const addButton = document.querySelector('button[aria-label="Add phrase"]');
+
+        if (nextCard instanceof HTMLElement) {
+          nextCard.focus();
+        } else if (prevCard instanceof HTMLElement) {
+          prevCard.focus();
+        } else if (addButton instanceof HTMLElement) {
+          addButton.focus();
+        }
+      }, 100);
+    }
+  }, [phrase.id, phrase.text, onDelete]);
 
   const handleEdit = useCallback(() => {
     setIsEditing(true);
@@ -30,29 +57,27 @@ export const PhraseCard: React.FC<PhraseCardProps> = memo(({ phrase, onDelete, o
 
   const handleSave = useCallback(() => {
     const trimmedText = editText.trim();
-    
-    // Validaciones
+
     if (!trimmedText) {
       setError('La frase no puede estar vacía');
       return;
     }
-    
+
     if (trimmedText.length < 3) {
       setError('La frase debe tener al menos 3 caracteres');
       return;
     }
-    
+
     if (trimmedText.length > 200) {
       setError('La frase debe tener menos de 200 caracteres');
       return;
     }
 
-    // Validar duplicados (excluyendo la frase actual)
     const normalizedInput = trimmedText.toLowerCase();
     const isDuplicate = state.phrases.some(
       p => p.id !== phrase.id && p.text.trim().toLowerCase() === normalizedInput
     );
-    
+
     if (isDuplicate) {
       setError('Esta frase ya existe');
       return;
@@ -61,6 +86,7 @@ export const PhraseCard: React.FC<PhraseCardProps> = memo(({ phrase, onDelete, o
     onEdit(phrase.id, trimmedText);
     setIsEditing(false);
     setError('');
+    toast.success('Frase actualizada correctamente');
   }, [phrase.id, editText, onEdit, state.phrases]);
 
   const handleCancel = useCallback(() => {
@@ -70,17 +96,18 @@ export const PhraseCard: React.FC<PhraseCardProps> = memo(({ phrase, onDelete, o
   }, [phrase.text]);
 
   return (
-    <article 
-      className="relative bg-gradient-to-br from-white to-blue-50 dark:from-slate-800 dark:to-slate-900 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border-2 border-blue-100 dark:border-blue-900 hover:border-blue-300 dark:hover:border-blue-700 group overflow-hidden"
+    <article
+      ref={cardRef}
+      className="relative bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 p-6 border-2 border-blue-100 hover:border-blue-300 group overflow-hidden"
       aria-label={`Phrase: ${phrase.text}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Decorative gradient overlay */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-orange-400/10 rounded-full blur-3xl -z-0 transition-opacity duration-300" 
-           style={{ opacity: isHovered ? 1 : 0 }}></div>
-      
-      {/* Content */}
+      <div
+        className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-orange-400/10 rounded-full blur-3xl -z-0 transition-opacity duration-300"
+        style={{ opacity: isHovered ? 1 : 0 }}
+      ></div>
+
       <div className="relative z-10">
         {isEditing ? (
           <div className="mb-4">
@@ -90,27 +117,38 @@ export const PhraseCard: React.FC<PhraseCardProps> = memo(({ phrase, onDelete, o
                 setEditText(e.target.value);
                 setError('');
               }}
-              className="w-full p-3 border-2 border-blue-300 dark:border-blue-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-gray-100 text-gray-800 resize-none"
+              className="w-full p-3 border-2 border-blue-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 resize-none"
               rows={3}
               autoFocus
               maxLength={200}
+              aria-label="Edit phrase text"
             />
             {error && (
-              <p className="text-red-500 dark:text-red-400 text-xs mt-2 font-medium">{error}</p>
+              <p className="text-red-500 text-xs mt-2 font-medium" role="alert">{error}</p>
             )}
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 text-right">
+            <p className="text-xs text-gray-400 mt-1 text-right" aria-live="polite">
               {editText.length}/200
             </p>
           </div>
         ) : (
-          <p className="text-gray-800 dark:text-gray-100 mb-4 break-words leading-relaxed text-base font-medium min-h-[60px]">
+          <p
+            className="text-gray-800 mb-4 leading-relaxed text-base font-medium h-[80px]"
+            style={{
+              overflowWrap: 'anywhere',
+              wordBreak: 'break-word',
+              display: '-webkit-box',
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden'
+            }}
+          >
             {phrase.text}
           </p>
         )}
 
         <footer className="flex justify-between items-center">
-          <time 
-            className="text-xs text-gray-500 dark:text-gray-400 font-semibold tracking-wide flex items-center gap-1"
+          <time
+            className="text-xs text-gray-500 font-semibold tracking-wide flex items-center gap-1"
             dateTime={new Date(phrase.createdAt).toISOString()}
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,7 +162,7 @@ export const PhraseCard: React.FC<PhraseCardProps> = memo(({ phrase, onDelete, o
               minute: '2-digit'
             })}
           </time>
-          
+
           <div className="flex gap-2">
             {isEditing ? (
               <>

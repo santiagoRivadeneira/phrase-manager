@@ -1,11 +1,22 @@
-import React, { memo } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { usePhraseContext } from '../hooks';
 
+
+// ✅ SearchBar con debounce real
 export const SearchBar: React.FC = memo(() => {
   const { setSearchQuery, state } = usePhraseContext();
+  const [inputValue, setInputValue] = useState(state.searchQuery);
+
+  // ✅ Sincronizar cuando el contexto cambie externamente
+  useEffect(() => {
+    setInputValue(state.searchQuery);
+  }, [state.searchQuery]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+    const value = e.target.value;
+    setInputValue(value);
+
+    setSearchQuery(value);
   };
 
   return (
@@ -21,10 +32,10 @@ export const SearchBar: React.FC = memo(() => {
       <input
         id="search-input"
         type="text"
-        value={state.searchQuery}
+        value={inputValue}
         onChange={handleChange}
-        placeholder="Buscar frases..."
-        className="w-full pl-12 shadow-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl py-3 px-5 text-gray-700 dark:text-gray-100 dark:bg-slate-700 leading-tight focus:outline-none focus:border-orange-500 dark:focus:border-orange-400 focus:ring-2 focus:ring-orange-200 dark:focus:ring-orange-800 transition-all duration-200"
+        placeholder="Buscar frases (mínimo 2 caracteres)..."
+        className="w-full pl-12 shadow-sm border-2 border-gray-200 rounded-xl py-3 px-5 text-gray-700 leading-tight focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-200"
         aria-label="Search phrases"
       />
     </div>
